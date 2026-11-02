@@ -1,131 +1,157 @@
 #!/usr/bin/env python3
-"""Classifier skeleton: features.jsonl -> trained attribution model.
-
-Preexisting work for the Apart Research Agent Attribution Hackathon (Nov 27-29, 2026).
-Baselines first, fancy later. Requires scikit-learn for training; features.py has no deps.
-
-Usage:
-    python3 features.py --in corpus.jsonl --out features.jsonl
-    python3 train.py --in features.jsonl --out model.json
-    python3 train.py --in features.jsonl --predict "some text here"
-
-model.json holds the winning baseline + feature keys + label map, enough to
-reproduce the weekend's trained model in the report.
-"""
-
+"""Train and evaluate attribution baselines without prompt leakage."""
 import argparse
 import json
-import math
+import pickle
+import random
 from collections import Counter, defaultdict
+from pathlib import Path
 
-# ---------------------------------------------------------------- pure-python baselines (no deps)
+
+def load_rows(path):
+    with open(path, encoding="utf-8") as f:
+        rows = [json.loads(line) for line in f if line.strip()]
+    if not rows:
+        raise ValueError("input contains no JSONL rows")
+    keys = sorted(rows[0]["features"])
+    for i, row in enumerate(rows):
+        missing = set(keys) - set(row.get("features", {}))
+        if missing:
+            raise ValueError(f"row {i} is missing features: {sorted(missing)[:5]}")
+    return rows, keys
+
 
 def train_centroid(rows, keys):
-    """Nearest-centroid: mean feature vector per model. Dumb, fast, honest baseline."""
     sums, counts = defaultdict(lambda: [0.0] * len(keys)), Counter()
-    for r in rows:
-        m = r["model"]
-        counts[m] += 1
-        for i, k in enumerate(keys):
-            sums[m][i] += r["features"][k]
-    return {m: [s / counts[m] for s in v] for m, v in sums.items()}
+    for row in rows:
+        label = row["model"]
+        counts[label] += 1
+        for i, key in enumerate(keys):
+            value = row["features"][key]
+            if not isinstance(value, (int, float)):
+                raise TypeError(f"feature {key!r} is non-numeric")
+            sums[label][i] += float(value)
+    return {label: [v / counts[label] for v in vector]
+            for label, vector in sums.items()}
 
-def predict_centroid(centroids, keys, feats):
-    best, bd = None, float("inf")
-    v = [feats[k] for k in keys]
-    for m, c in centroids.items():
-        d = sum((a - b) ** 2 for a, b in zip(v, c))
-        if d < bd:
-            bd, best = d, m
-    return best
 
-def evaluate(rows, keys, predictor):
-    correct = Counter()
-    total = Counter()
-    conf = Counter()
-    for r in rows:
-        pred = predictor(r["features"])
-        total[r["model"]] += 1
-        conf[(r["model"], pred)] += 1
-        if pred == r["model"]:
-            correct[r["model"]] += 1
-    acc = sum(correct.values()) / max(sum(total.values()), 1)
-    per_class = {m: correct[m] / total[m] for m in total}
-    return acc, per_class, conf
+def predict_centroid(centroids, keys, features):
+    vector = [float(features[key]) for key in keys]
+    return min(centroids, key=lambda label: sum(
+        (a - b) ** 2 for a, b in zip(vector, centroids[label])))
 
-# ---------------------------------------------------------------- sklearn (optional, better)
 
-def train_sklearn(rows, keys):
+def metrics(y_true, y_pred):
+    labels = sorted(set(y_true) | set(y_pred))
+    cm = {actual: {pred: 0 for pred in labels} for actual in labels}
+    for actual, pred in zip(y_true, y_pred):
+        cm[actual][pred] += 1
+    per_class = {}
+    for label in labels:
+        tp = cm[label][label]
+        support = sum(cm[label].values())
+        predicted = sum(cm[actual][label] for actual in labels)
+        precision = tp / predicted if predicted else 0.0
+        recall = tp / support if support else 0.0
+        per_class[label] = {
+            "precision": precision, "recall": recall,
+            "f1": (2 * precision * recall / (precision + recall))
+            if precision + recall else 0.0,
+            "support": support,
+        }
+    return {
+        "accuracy": sum(a == b for a, b in zip(y_true, y_pred)) / max(len(y_true), 1),
+        "macro_f1": sum(x["f1"] for x in per_class.values()) / max(len(per_class), 1),
+        "per_class": per_class, "confusion": cm,
+    }
+
+
+def split_groups(rows, test_frac, seed):
+    groups = sorted({row["prompt_id"] for row in rows})
+    if len(groups) < 2:
+        raise ValueError("need at least two prompt_id groups")
+    rng = random.Random(seed)
+    rng.shuffle(groups)
+    n_test = max(1, min(len(groups) - 1, round(len(groups) * test_frac)))
+    test_groups = set(groups[:n_test])
+    train = [r for r in rows if r["prompt_id"] not in test_groups]
+    test = [r for r in rows if r["prompt_id"] in test_groups]
+    return train, test
+
+
+def evaluate_centroid(rows, keys, test_frac, seed):
+    train, test = split_groups(rows, test_frac, seed)
+    centroids = train_centroid(train, keys)
+    truth = [r["model"] for r in test]
+    pred = [predict_centroid(centroids, keys, r["features"]) for r in test]
+    report = metrics(truth, pred)
+    report.update(train_rows=len(train), test_rows=len(test))
+    return report
+
+
+def sklearn_once(train, test, keys):
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.linear_model import LogisticRegression
-    X = [[r["features"][k] for k in keys] for r in rows]
-    y = [r["model"] for r in rows]
-    models = {
-        "logreg": LogisticRegression(max_iter=2000),
+    x_train = [[r["features"][k] for k in keys] for r in train]
+    x_test = [[r["features"][k] for k in keys] for r in test]
+    y_train, y_test = [r["model"] for r in train], [r["model"] for r in test]
+    candidates = {
+        "logreg": LogisticRegression(max_iter=2000, random_state=7),
         "rf": RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=7),
     }
-    trained = {}
-    for name, m in models.items():
-        m.fit(X, y)
-        trained[name] = m
-    return trained
+    result = {}
+    for name, model in candidates.items():
+        model.fit(x_train, y_train)
+        result[name] = (metrics(y_test, model.predict(x_test).tolist()), model)
+    return result
 
-# ---------------------------------------------------------------- main
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--in", dest="inp", required=True)
     ap.add_argument("--out", default="model.json")
-    ap.add_argument("--predict", default=None)
+    ap.add_argument("--predict")
     ap.add_argument("--test-frac", type=float, default=0.25)
+    ap.add_argument("--repeats", type=int, default=5)
+    ap.add_argument("--seed", type=int, default=7)
     args = ap.parse_args()
+    if not 0 < args.test_frac < 1 or args.repeats < 1:
+        ap.error("--test-frac must be in (0,1) and --repeats must be positive")
 
-    rows = [json.loads(l) for l in open(args.inp)]
-    keys = sorted(rows[0]["features"].keys())
-    # group by prompt_id so the same prompt never leaks across train/test
-    by_prompt = defaultdict(list)
-    for r in rows:
-        by_prompt[r["prompt_id"]].append(r)
-    pids = sorted(by_prompt)
-    cut = max(1, int(len(pids) * (1 - args.test_frac)))
-    train = [r for pid in pids[:cut] for r in by_prompt[pid]]
-    test = [r for pid in pids[cut:] for r in by_prompt[pid]]
-    print(f"train {len(train)} / test {len(test)} (split by prompt_id)", flush=True)
+    rows, keys = load_rows(args.inp)
+    reports = [evaluate_centroid(rows, keys, args.test_frac, args.seed + i)
+               for i in range(args.repeats)]
+    mean_acc = sum(r["accuracy"] for r in reports) / len(reports)
+    mean_f1 = sum(r["macro_f1"] for r in reports) / len(reports)
+    print(f"grouped centroid: accuracy={mean_acc:.3f} macro_f1={mean_f1:.3f} "
+          f"over {len(reports)} holdouts")
 
-    # baseline: nearest centroid (no deps)
-    centroids = train_centroid(train, keys)
-    acc, per_class, conf = evaluate(test, keys, lambda f: predict_centroid(centroids, keys, f))
-    print(f"[centroid] acc={acc:.3f} per-class={ {k: round(v,3) for k,v in per_class.items()} }")
-
-    results = {"baseline": "centroid", "baseline_acc": acc,
-               "baseline_per_class": per_class, "keys": keys,
-               "centroids": centroids}
-
-    # sklearn models if available
+    centroids = train_centroid(rows, keys)
+    result = {
+        "schema_version": 2, "task": "closed_set_model_attribution",
+        "split_unit": "prompt_id", "seed": args.seed, "keys": keys,
+        "labels": sorted(centroids), "centroids": centroids,
+        "evaluation": {"repeats": reports, "mean_accuracy": mean_acc,
+                       "mean_macro_f1": mean_f1},
+    }
+    train, test = split_groups(rows, args.test_frac, args.seed)
     try:
-        trained = train_sklearn(train, keys)
-        import pickle
-        for name, m in trained.items():
-            X_test = [[r["features"][k] for k in keys] for r in test]
-            y_test = [r["model"] for r in test]
-            acc = m.score(X_test, y_test)
-            print(f"[{name}] acc={acc:.3f}")
-            results[name + "_acc"] = acc
-            with open(f"model_{name}.pkl", "wb") as f:
-                pickle.dump((m, keys), f)
-            print(f"  saved model_{name}.pkl")
+        for name, (report, model) in sklearn_once(train, test, keys).items():
+            result["evaluation"][name] = report
+            path = Path(args.out).with_name(f"{Path(args.out).stem}_{name}.pkl")
+            with open(path, "wb") as f:
+                pickle.dump((model, keys), f)
+            print(f"{name}: accuracy={report['accuracy']:.3f} macro_f1={report['macro_f1']:.3f}")
     except ImportError:
-        print("(sklearn not installed — centroid only; pip install scikit-learn for logreg/rf)")
+        print("scikit-learn unavailable; reported portable centroid only")
 
-    with open(args.out, "w") as f:
-        json.dump(results, f)
+    with open(args.out, "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2)
     print(f"wrote {args.out}")
-
     if args.predict:
         from features import text_features
-        feats = text_features(args.predict)
-        pred = predict_centroid(centroids, keys, feats)
-        print(f"predicted model: {pred}")
+        print(f"predicted model: {predict_centroid(centroids, keys, text_features(args.predict))}")
+
 
 if __name__ == "__main__":
     main()

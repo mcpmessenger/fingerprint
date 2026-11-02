@@ -120,13 +120,16 @@ def behavioral_features(events: list) -> dict:
     feats["action_ttr"] = len(set(acts)) / len(acts)
     # human-initiated ratio
     feats["human_action_ratio"] = sum(1 for e in events if e.get("actor") == "human") / len(events)
-    # most common action bigram (tool-use sequence habit)
+    # most common action bigram frequency (tool-use sequence habit)
+    # NOTE: bigram identity kept as a separate string field, not a numeric feature,
+    # so the feature matrix stays numeric.
     bigrams = Counter(zip(acts, acts[1:]))
     if bigrams:
         (a1, a2), c = bigrams.most_common(1)[0]
-        feats["top_bigram"] = f"{a1}>{a2}"
         feats["top_bigram_ratio"] = c / (len(acts) - 1)
-    return feats
+    else:
+        feats["top_bigram_ratio"] = 0.0
+    return feats, (f"{a1}>{a2}" if bigrams else None)
 
 # ---------------------------------------------------------------- runner
 
