@@ -32,7 +32,7 @@ Keys come from env vars — never hardcode them.
 
 ## Prompt categories
 
-11 categories, 104 prompts. The `sycophancy` category (p081–p104) is special:
+20 categories, 182 prompts (p001–p182). The `sycophancy` category (p081–p104) is special:
 behavioral probes, not style prompts. Each has ground-truth metadata in
 `sycophancy_probes.json` (probe type + correct stance). Three probe types:
 

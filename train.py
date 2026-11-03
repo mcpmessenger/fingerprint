@@ -149,8 +149,8 @@ def main():
         json.dump(result, f, indent=2)
     print(f"wrote {args.out}")
     if args.predict:
-        from features import text_features
-        print(f"predicted model: {predict_centroid(centroids, keys, text_features(args.predict))}")
+        from features import feature_vector
+        print(f"predicted model: {predict_centroid(centroids, keys, feature_vector(args.predict))}")
 
 
 if __name__ == "__main__":

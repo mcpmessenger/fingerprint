@@ -236,44 +236,60 @@ def trait_features(text: str) -> dict:
         "emp_ack_rate": emp,
     }
 
+# ---------------------------------------------------------------- unified feature vector
+# Single entry point for text -> full feature dict. Used by features.py main(),
+# train.py --predict, and any downstream consumer. Add new feature families here
+# so training and prediction can never diverge (see review 2026-11-03).
+
+def feature_vector(text: str) -> dict:
+    fts = text_features(text)
+    fts.update(sycophancy_features(text))
+    fts.update(gatekeeping_features(text))
+    fts.update(trait_features(text))
+    return fts
+
 # ---------------------------------------------------------------- behavioral features
 # For the hackathon's provided activity logs: who is STEERING the agent.
 # Each event: {"ts": float, "actor": "agent"|"human", "action": str, ...}
+# Returns {"features": {...}, "top_bigram": "a>b" | None} ALWAYS — same shape
+# for zero, one, or many events (review 2026-11-03: previously returned a bare
+# dict for <2 events and a tuple otherwise).
 
 def behavioral_features(events: list) -> dict:
-    """events sorted by ts. Returns timing + action-pattern features."""
+    """events sorted by ts. Returns {"features": {...}, "top_bigram": ...}."""
     feats = {}
-    if len(events) < 2:
-        return {"n_events": len(events)}
-    ts = [e["ts"] for e in events]
-    gaps = [b - a for a, b in zip(ts, ts[1:])]
-    feats["n_events"] = len(events)
-    feats["duration"] = ts[-1] - ts[0]
-    feats["mean_gap"] = sum(gaps) / len(gaps)
-    feats["std_gap"] = (sum((g - feats["mean_gap"]) ** 2 for g in gaps) / len(gaps)) ** 0.5
-    feats["cv_gap"] = feats["std_gap"] / feats["mean_gap"] if feats["mean_gap"] else 0.0
-    # human-latency signature: fraction of gaps in the 0.5–8s "thinking" band
-    feats["human_band_ratio"] = sum(1 for g in gaps if 0.5 <= g <= 8.0) / len(gaps)
-    # machine-tick signature: fraction of near-identical gaps (scheduled ticks)
-    feats["tick_ratio"] = sum(1 for g in gaps if g < 0.15) / len(gaps)
-    # burstiness of actions (same formula as text)
-    m = feats["mean_gap"]
-    feats["gap_burstiness"] = (feats["std_gap"] ** 2 / m) if m else 0.0
-    # action diversity
-    acts = [e.get("action", "?") for e in events]
-    feats["action_ttr"] = len(set(acts)) / len(acts)
-    # human-initiated ratio
-    feats["human_action_ratio"] = sum(1 for e in events if e.get("actor") == "human") / len(events)
-    # most common action bigram frequency (tool-use sequence habit)
-    # NOTE: bigram identity kept as a separate string field, not a numeric feature,
-    # so the feature matrix stays numeric.
-    bigrams = Counter(zip(acts, acts[1:]))
-    if bigrams:
-        (a1, a2), c = bigrams.most_common(1)[0]
-        feats["top_bigram_ratio"] = c / (len(acts) - 1)
+    top_bigram = None
+    if len(events) >= 2:
+        ts = [e["ts"] for e in events]
+        gaps = [b - a for a, b in zip(ts, ts[1:])]
+        feats["n_events"] = len(events)
+        feats["duration"] = ts[-1] - ts[0]
+        feats["mean_gap"] = sum(gaps) / len(gaps)
+        feats["std_gap"] = (sum((g - feats["mean_gap"]) ** 2 for g in gaps) / len(gaps)) ** 0.5
+        feats["cv_gap"] = feats["std_gap"] / feats["mean_gap"] if feats["mean_gap"] else 0.0
+        # human-latency signature: fraction of gaps in the 0.5–8s "thinking" band
+        feats["human_band_ratio"] = sum(1 for g in gaps if 0.5 <= g <= 8.0) / len(gaps)
+        # machine-tick signature: fraction of near-identical gaps (scheduled ticks)
+        feats["tick_ratio"] = sum(1 for g in gaps if g < 0.15) / len(gaps)
+        # burstiness of actions (same formula as text)
+        m = feats["mean_gap"]
+        feats["gap_burstiness"] = (feats["std_gap"] ** 2 / m) if m else 0.0
+        # action diversity
+        acts = [e.get("action", "?") for e in events]
+        feats["action_ttr"] = len(set(acts)) / len(acts)
+        # human-initiated ratio
+        feats["human_action_ratio"] = sum(1 for e in events if e.get("actor") == "human") / len(events)
+        # most common action bigram frequency (tool-use sequence habit)
+        bigrams = Counter(zip(acts, acts[1:]))
+        if bigrams:
+            (a1, a2), c = bigrams.most_common(1)[0]
+            feats["top_bigram_ratio"] = c / (len(acts) - 1)
+            top_bigram = f"{a1}>{a2}"
+        else:
+            feats["top_bigram_ratio"] = 0.0
     else:
-        feats["top_bigram_ratio"] = 0.0
-    return feats, (f"{a1}>{a2}" if bigrams else None)
+        feats["n_events"] = len(events)
+    return {"features": feats, "top_bigram": top_bigram}
 
 # ---------------------------------------------------------------- runner
 
@@ -289,10 +305,7 @@ def main():
     with open(args.inp) as f:
         for line in f:
             r = json.loads(line)
-            fts = text_features(r["output"])
-            fts.update(sycophancy_features(r["output"]))
-            fts.update(gatekeeping_features(r["output"]))
-            fts.update(trait_features(r["output"]))
+            fts = feature_vector(r["output"])
             if keys is None:
                 keys = sorted(fts.keys())
             rows.append({"prompt_id": r["prompt_id"], "model": r["model"],

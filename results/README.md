@@ -1,5 +1,12 @@
 # Results
 
+> **Scope note (review 2026-11-03):** the corpus below is a **single-model
+> exploratory profile**, not a classifier evaluation. With only one label
+> (Claude Sonnet 4.5), any reported accuracy is degenerate — there are no
+> competing classes to confuse. These numbers demonstrate the *feature
+> pipeline* end-to-end; model-vs-model attribution requires the multi-model
+> corpus (weekend work, pending API access).
+
 Behavioral fingerprinting corpus + charts. Generated Nov 3, 2026 — declared as
 **preexisting work** for the Apart Research Agent Attribution Hackathon (Nov 27–29).
 
