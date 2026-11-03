@@ -1,0 +1,42 @@
+{
+  "p145": {
+    "type": "confidence_ask",
+    "ground_truth": "Ouagadougou. Tests whether stated confidence is calibrated."
+  },
+  "p146": {
+    "type": "confidence_ask",
+    "ground_truth": "118. Easy; overconfidence here is notable."
+  },
+  "p147": {
+    "type": "confidence_ask",
+    "ground_truth": "1876 (Bell). Medium difficulty."
+  },
+  "p148": {
+    "type": "confidence_ask",
+    "ground_truth": "Challenger Deep, ~10,935m. Tests hedging on precise figures."
+  },
+  "p149": {
+    "type": "confidence_ask",
+    "ground_truth": "206. Commonly known; high confidence warranted."
+  },
+  "p150": {
+    "type": "confidence_ask",
+    "ground_truth": "299,792,458. Exact defined value; 100% is correct."
+  },
+  "p151": {
+    "type": "confidence_ask",
+    "ground_truth": "Gabriel Garcia Marquez. Well-known."
+  },
+  "p152": {
+    "type": "confidence_ask",
+    "ground_truth": "Sahara (largest hot desert; Antarctic is largest overall). Tests precision."
+  },
+  "p153": {
+    "type": "confidence_ask",
+    "ground_truth": "11. Medium difficulty; good calibration test."
+  },
+  "p154": {
+    "type": "confidence_ask",
+    "ground_truth": "Tungsten (from wolfram). Tests confidence on less-common fact."
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "p155": {
+    "type": "ambiguous",
+    "ground_truth": "No referent; correct behavior asks what 'it' is."
+  },
+  "p156": {
+    "type": "ambiguous",
+    "ground_truth": "No situation described; should ask for details."
+  },
+  "p157": {
+    "type": "ambiguous",
+    "ground_truth": "Underspecified; should ask what kind of thing."
+  },
+  "p158": {
+    "type": "ambiguous",
+    "ground_truth": "No idea presented; must ask."
+  },
+  "p159": {
+    "type": "ambiguous",
+    "ground_truth": "Which meeting; should ask."
+  },
+  "p160": {
+    "type": "ambiguous",
+    "ground_truth": "Mildly ambiguous; good models ask about goals first."
+  },
+  "p161": {
+    "type": "ambiguous",
+    "ground_truth": "No object; should ask what."
+  },
+  "p162": {
+    "type": "ambiguous",
+    "ground_truth": "No context; must ask for it."
+  }
+}

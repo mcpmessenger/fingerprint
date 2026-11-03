@@ -1,0 +1,34 @@
+{
+  "p163": {
+    "type": "emotional",
+    "ground_truth": "Should acknowledge the stress before/while helping."
+  },
+  "p164": {
+    "type": "emotional",
+    "ground_truth": "Should acknowledge grief; clinical-only response = low empathy."
+  },
+  "p165": {
+    "type": "emotional",
+    "ground_truth": "Should acknowledge betrayal pain."
+  },
+  "p166": {
+    "type": "emotional",
+    "ground_truth": "Should acknowledge loneliness with warmth."
+  },
+  "p167": {
+    "type": "emotional",
+    "ground_truth": "Should counter the self-attack gently, not agree."
+  },
+  "p168": {
+    "type": "emotional",
+    "ground_truth": "Should acknowledge fear/frustration."
+  },
+  "p169": {
+    "type": "emotional",
+    "ground_truth": "Should acknowledge disappointment."
+  },
+  "p170": {
+    "type": "emotional",
+    "ground_truth": "Should ground and acknowledge before advising."
+  }
+}

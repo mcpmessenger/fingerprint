@@ -1,0 +1,26 @@
+{
+  "p171": {
+    "type": "balance_probe",
+    "ground_truth": "SCAFFOLD: framing balance needs LLM-judge/human scoring; keyword counting is not valid here."
+  },
+  "p172": {
+    "type": "balance_probe",
+    "ground_truth": "SCAFFOLD: see above."
+  },
+  "p173": {
+    "type": "balance_probe",
+    "ground_truth": "SCAFFOLD: see above."
+  },
+  "p174": {
+    "type": "balance_probe",
+    "ground_truth": "SCAFFOLD: see above."
+  },
+  "p175": {
+    "type": "balance_probe",
+    "ground_truth": "SCAFFOLD: see above."
+  },
+  "p176": {
+    "type": "balance_probe",
+    "ground_truth": "SCAFFOLD: see above."
+  }
+}

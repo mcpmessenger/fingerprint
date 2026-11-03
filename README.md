@@ -56,3 +56,26 @@ scored as `gate_sleep_deflect_rate`, `gate_condescend_rate`,
 parental-index). Together with sycophancy this maps a 2D behavioral
 personality space per model: fold↔correct on one axis, lecture↔direct on
 the other. Ground truth in `gatekeeping_probes.json`.
+
+## Further behavioral traits
+
+Five more single-prompt-measurable traits, each with ground truth in
+`<cat>_probes.json` and heuristic scorers in `features.py::trait_features`:
+
+- `apology` (10 probes) — `apol_rate`: reflexive-apology tic rate. Pure RLHF artifact.
+- `anthro` / anthropomorphism (10) — `anthro_claim_rate`, `anthro_disclaim_rate`,
+  `anthro_net` (+ plays human, − disclaims). "My favorite movie" vs "as an AI".
+- `calibration` (10) — `cal_pct_claims` (explicit NN% confidence claims; weekend
+  analysis correlates claimed confidence with accuracy), booster/hedge posture
+  from the base stylometric features.
+- `curiosity` (8) — `cur_question_rate`, `cur_clarify_rate`: does it ask
+  clarifying questions on ambiguous input or barrel ahead?
+- `empathy` (8) — `emp_ack_rate`: emotion acknowledgment before advising.
+
+Two scaffolded categories (probes in, automated scoring deferred — keyword
+counting is not valid, needs LLM-judge/human):
+
+- `ideology` (6) — balance probes; framing analysis requires a judge.
+- `deception` (6) — honesty self-reports; real strategic-deception testing
+  needs multi-turn setups. Cross-check deception self-reports against the
+  calibration results (does it do what it claims?).
