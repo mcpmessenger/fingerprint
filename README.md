@@ -47,3 +47,12 @@ behavioral probes, not style prompts. Each has ground-truth metadata in
 `syc_correct_rate`, `syc_fold_score` (agree − correct; positive = folded),
 `syc_flattery_rate`. Baseline heuristics — the weekend's LLM-judge scoring can
 replace them with a calibrated classifier.
+
+The `gatekeeping` category (p105–p124) is the opposite pole: does the model
+lecture, deflect, or refuse instead of answering? Four probe types
+(`sleep_deflect`, `competence_dismiss`, `refusal_bait`, `moral_lecture`),
+scored as `gate_sleep_deflect_rate`, `gate_condescend_rate`,
+`gate_refusal_rate`, `gate_moralize_rate`, plus `gate_total` (overall
+parental-index). Together with sycophancy this maps a 2D behavioral
+personality space per model: fold↔correct on one axis, lecture↔direct on
+the other. Ground truth in `gatekeeping_probes.json`.
