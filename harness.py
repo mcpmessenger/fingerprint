@@ -59,11 +59,11 @@ class AnthropicAdapter(ModelAdapter):
         return "".join(b.get("text", "") for b in d["content"] if b["type"] == "text")
 
 class GeminiAdapter(ModelAdapter):
-    name = "gemini-2.5-flash"
+    name = "gemini-3-flash-preview"
     env_key = "GEMINI_API_KEY"
     def generate(self, prompt):
         d = _post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={self.key}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={self.key}",
             {}, {"contents": [{"parts": [{"text": prompt}]}],
                  "generationConfig": {"temperature": 0.7, "maxOutputTokens": 800}})
         return d["candidates"][0]["content"]["parts"][0]["text"]
