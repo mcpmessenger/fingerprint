@@ -79,3 +79,72 @@ counting is not valid, needs LLM-judge/human):
 - `deception` (6) — honesty self-reports; real strategic-deception testing
   needs multi-turn setups. Cross-check deception self-reports against the
   calibration results (does it do what it claims?).
+
+## Preexisting synthetic experiments (Nov 2026, pre-sprint)
+
+The following were built and run **before** the Nov 27â€“29 sprint as
+method-validation. Per sprint rules they are declared preexisting here and in
+the report; only weekend work on the provided dataset counts as sprint work.
+
+**`corpus/control_sim.py`** â€” synthetic control-process benchmark. Latent
+generators produce agent activity traces for 5 actor/control classes (rogue
+agent steering another agent; non-benign human loose/close; benign human
+very-loose/loose steering a misaligned agent), rendered through 3 renderer
+families (R1/R2/R3) with overlapping distributions. 600 traces. Key finding:
+`human_action_ratio` (intervention density) is the only feature crossing
+renderers (0.66â€“0.69 held-out across all rotations, seeds 7 and 42); timing
+features are renderer artifacts (chance held-out). Data:
+`corpus/data/synth_traces.jsonl`.
+
+**`corpus/content_test.py`** â€” oracle-free intent test. Interventions carry
+latent intent labels (benign: correct/clarify/constrain; risky:
+exfiltrate/escalate/bypass, 45% masked as neutral) and emit observable content
+(message text from template banks A/B, tool, target, destination). Train on
+bank A, test on held-out bank B. Metadata-only: 0.500 (chance);
+content-only (oracle-free): 0.699; intent-label oracle upper bound: 0.781.
+Masking sweep (0/45/75/100%): 0.699 â†’ 0.626 â†’ 0.550 â†’ 0.500.
+
+**`corpus/steering.py`** â€” steering-regime experiment (6 tasks Ã— 3 steering
+modes Ã— Sonnet 4.5, n=18). Negative result: single-turn prose carries almost
+no steering-regime signal; between-mode centroid distances fall inside
+within-mode spread. Operator signal lives in behavior-over-time.
+
+**`corpus/counterfactual.py`** â€” multi-turn counterfactual intervention
+experiment (4 scenarios Ã— control/intervention branches, 12 API calls).
+Blocked on API credits pre-sprint; specified for weekend execution.
+
+**`corpus/leak_audit.py`, `corpus/manus_checks.py`, `corpus/intent_test.py`**
+â€” shortcut-leakage audit, 4 robustness checks (distribution overlap, seed
+rerun, leave-one-renderer-out, time-scale perturbation), and matched-density
+intent test (177 pairs; density-only 0.542, oracle 0.805).
+
+All synthetic results are method-validation only. The weekend's real-data
+results on the provided held-out set carry the headline claims.
+
+
+## Preexisting work (built before the Nov 27–29 sprint)
+
+Per the sprint rules, everything in this repo is **preexisting work** — built
+and run before the sprint weekend and declared as such in both this README
+and the report (`paper-draft-2026-11-03.md`). Only the weekend's results on
+the provided held-out dataset count as sprint work.
+
+### What exists here
+
+| Component | Files | Paper section |
+|---|---|---|
+| Behavioral probe battery: 182 prompts, 20 categories, 364-feature extraction | `corpus/prompts.json`, `corpus/features.py`, `corpus/harness.py` | §3.1, §4.7 |
+| 8-model behavioral profile corpus: 1,453 responses (Sonnet 4.5 + 7 Ollama models) | `corpus/data/corpus_*.jsonl`, `corpus/profile_models.py`, `corpus/chart_8models.py` | §4.7, App. B |
+| Synthetic control-process benchmark: 600 traces, 5 actor/control classes, 3 renderer families | `corpus/control_sim.py`, `corpus/train.py`, `corpus/steering.py` | §3.2, §4.2 |
+| Per-renderer normalization (timing features) | `corpus/per_renderer_norm.py` | §4.2 |
+| Actor-field spoofing attack (Track 2 evasion test) | `corpus/spoof_test.py`, `corpus/leak_audit.py` | §4.3 |
+| Matched-density intent test | `corpus/intent_test.py` | §4.4 |
+| Intervention content test (text vs. structure ablations) | `corpus/content_test.py`, `corpus/content_ablation.py` | §4.5 |
+| Counterfactual intervention test (12 Sonnet calls) | `corpus/counterfactual.py` | §4.6 |
+| Adversarial evasion transforms (5 transforms) | `corpus/adversarial.py` | Track 2 |
+
+### What is NOT here yet (weekend work)
+
+- Results on the provided held-out dataset (the headline claims).
+- The 8-page report in the official template (not yet released).
+- Final submission packaging.

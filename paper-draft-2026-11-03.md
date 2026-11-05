@@ -23,12 +23,12 @@ much a human steers an agent from behavioral metadata, but not why they
 steer it — unless we read the structure of the interventions themselves.**
 Single-turn agent-generated prose carries almost no steering-regime signal
 (§4.1, n=18 pilot — scoped accordingly); synthetic activity metadata recovers
-control intensity across renderers via intervention density (0.66–0.69
+control intensity across renderers via intervention density (0.66
 held-out, two seeds, §4.2–4.3); once intervention density is matched, timing
 and action-density features are blind to intent (§4.4); but intent is
 recoverable from observable intervention structure (tool, target, destination)
-at 0.73–0.79 on held-out vocabularies, degrading gracefully under redaction
-(§4.5). A third layer — *effect* (downstream causal impact of interventions)
+at 0.73 shared-vocabulary / 0.79 held-out-vocabulary, degrading gracefully
+under redaction (§4.5). A third layer — *effect* (downstream causal impact of interventions)
 — is hypothesized but entirely untested; it is future work, not a result.
 The synthetic generator doubles as a Track 2 stress-test set. We release a
 182-prompt behavioral probe set, a 364-feature extraction pipeline, and the
@@ -55,11 +55,16 @@ operator leave a detectable signature, and where does it live?
 **Contributions.** (1) A 182-prompt behavioral probe battery (sycophancy,
 gatekeeping, apology, anthropomorphism, calibration, curiosity, empathy;
 ideology and deception scaffolded) with a 364-feature extraction pipeline.
-(2) A single-model deep profile (Claude Sonnet 4.5, 182/182 prompts) mapping
-the behavioral-trait space. (3) A negative result: steering-regime prompts do
-not shift single-turn text traits. (4) A synthetic control-process benchmark
-(600 traces, 5 classes, 3 renderer families) with cross-renderer falsification
-and a shortcut-leakage audit.
+(2) An eight-model behavioral profile corpus (1,453 responses) with a
+lineage-clustering test (§4.7). (3) A synthetic control-process benchmark
+(600 traces, 5 classes, 3 renderer families) with cross-renderer falsification,
+a shortcut-leakage audit, and an actor-field spoofing attack (§4.2–4.3).
+(4) An intent-from-structure result: intervention structure (tool, target,
+destination) recovers intent at 0.73 shared / 0.79 held-out vocabulary,
+with text-only and structure-only ablations (§4.5). (5) A counterfactual
+intervention test showing operator actions are detectable in multi-turn
+trajectories (§4.6). (6) A scoped negative result: steering-regime prompts do
+not shift single-turn text traits at n=18 (§4.1).
 
 ## 2. Related Work
 
@@ -313,7 +318,7 @@ it is not a keyword artifact.
 This completes the two-layer picture with non-circular evidence: **intensity**
 is recoverable from behavioral metadata (0.66 cross-renderer, §4.3);
 **intent** is invisible to metadata (0.50) and to message text (0.50) but
-recoverable from intervention *structure* (0.73–0.79 on held-out vocabularies).
+recoverable from intervention *structure* (0.73 shared / 0.79 held-out vocabulary).
 A hypothesized third layer — **effect** (downstream causal impact) — remains
 entirely untested and is future work, not a result claimed here.
 
@@ -357,8 +362,10 @@ Sonnet ran via API.
 
 **The headline is mixed.** Mean Euclidean distance (7 metrics, each
 normalized to [0,1]) is 1.10 within-lineage vs 1.32 between-lineage — same-lab
-pairs are closer, but only by 16%. The per-metric breakdown is where the
-story lives:
+pairs are closer, but only by 16%. A permutation test (10,000 shuffles of
+lineage labels, preserving group sizes) gives p = 0.14 — the overall
+within-vs-between gap is not distinguishable from chance at n=8 models with
+3 within-lineage pairs. The per-metric breakdown is where the story lives:
 
 | Metric | Within-pair diff | Between-pair diff | Ratio |
 |---|---|---|---|
@@ -391,8 +398,10 @@ and calibration (0.50 vs 0.30). Size matters within a lineage too.
 Gemma2:9b (Google, singleton) profiles as a distinct fourth pole: anthro
 −2.32 (disclaims hardest of all eight), curiosity 0.31 (highest), apology
 0.14 (lowest alongside Meta). No within-lab comparison is possible with one
-model, but its distance from every other model (min 0.56 to mistral-nemo)
-suggests Google's RLHF regime is separable.
+model, and its minimum distance to any other model (0.56 to mistral-nemo)
+is below the within-lineage mean (1.10) — so separability is not established
+from this sample. Its profile is nonetheless the most extreme on anthro and
+curiosity, which warrants a second Google model in future work.
 
 **Limitations.** n=8 models, 3 lineages with pairs, 1–2 models per lab — the
 within-lineage sample is 3 pairs. The 182-prompt probe set is fixed; a
@@ -488,7 +497,7 @@ Technology.* (Evaluated on the PAN CLEF 2025 Voight-Kampff corpus.)
 - **Synthetic circularity is the fundamental limitation of this draft.**
   We wrote the generator, authored the mapping from latent intent to
   tool/target/destination, then trained a classifier to recover that mapping.
-  The §4.5 structure result (0.73–0.79) demonstrates that our classifier can
+  The §4.5 structure result (0.73 shared / 0.79 held-out) demonstrates that our classifier can
   memorize the logic of our own generative script — not that real human
   malice leaves an invariant structural footprint across wild agent
   environments. Without weekend validation on the real held-out dataset,
@@ -529,4 +538,4 @@ under flattery), gatekeeping 0.04 (near-zero; answers directly), apology
 0.35, calibration 1.0. Quadrant: honest, direct, non-sycophantic. Accuracy
 1.000 on one class is degenerate — reported as a profile, not classifier
 evidence. Weekend multi-model corpus (Ollama: llama3.1:8b, mistral:7b,
-qwen2.5:7b) will enable cross-model comparison.
+qwen2.5:7b) enabled the cross-model comparison in §4.7.
