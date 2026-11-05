@@ -196,8 +196,10 @@ dominant portable feature (0.665, unchanged by normalization).
 *Seeds and variance.* All numbers above are seed 7, n=200 test traces.
 95% binomial CIs: har 0.665 [0.594, 0.726]; timing (per-renderer norm) 0.450
 [0.381, 0.519]; all-features (per-renderer norm) 0.560 [0.491, 0.629].
-Seed-42 replication: har-only held-out 0.615–0.700 across rotations;
-all-features (per-renderer norm) 0.53–0.58. The har signal is stable; the
+Seed-42 replication: har-only held-out 0.615–0.700 across rotations
+(`manus_checks.py`). No seed-42 all-features run exists in committed code —
+the 0.53–0.58 range in an earlier draft was not backed by a script. The har
+signal is stable; the
 timing signal is real but noisier, and its CI approaches chance at the low
 end — treat 0.45 as suggestive, not established.
 
@@ -230,7 +232,7 @@ features (tool/target structure, §4.5) are the candidate defense.
 
 Confusion analysis locates the hard boundary: `nonbenign_close` is the most
 distinctive class (60/80 — heavy human intervention is unmistakable), while
-`benign_loose` vs `nonbenign_loose` collapse into each other (48 cross-errors).
+`benign_loose` vs `nonbenign_loose` collapse into each other (47 cross-errors: 20 + 27).
 **When steering is loose, intent does not show in behavior.** Rogue agents are
 most confused with `benign_veryloose` (17/80) — both minimize human presence,
 which is exactly the evasion strategy.
@@ -307,7 +309,8 @@ fully disjoint tool/target banks and feature ablations:
 Message text alone carries *no* intent signal (0.50/0.46 — the deceptive
 phrasing works as designed). **All of the intent signal is in the action
 structure**: which tools touch which targets, where data goes. And the
-structure signal *strengthens* under held-out vocabulary (0.787), confirming
+structure signal *holds* under held-out vocabulary (0.787 vs 0.731 shared;
+the 95% CI [0.724, 0.850] contains 0.731, so no strengthening is established), confirming
 it is not a keyword artifact.
 
 This completes the two-layer picture with non-circular evidence: **intensity**
@@ -358,8 +361,10 @@ two models each (Meta: llama3.1:8b + llama3.2:3b; Mistral: mistral:7b +
 mistral-nemo:12b; Alibaba: qwen2.5:7b + qwen2.5:1.5b), plus singletons
 Anthropic (Sonnet 4.5) and Google (gemma2:9b). All Ollama models ran locally;
 Sonnet ran via API. **Generation settings:** temperature 0.7, max 800 tokens,
-for every model (API and Ollama alike; `harness.py`). Ollama models ran at
-default pull quantization (Q4_K_M class) — no quantization was specified.
+for the Ollama models and the OpenAI/Gemini/OpenRouter adapters
+(`harness.py`). The Anthropic adapter sets max_tokens 800 but no temperature,
+so Sonnet 4.5 ran at the API default (1.0). Ollama models ran at default pull
+quantization (Q4_K_M class) — no quantization was specified.
 **Scoring:** 7 keyword-heuristic metrics (fold, gatekeeping, apology,
 anthropomorphism, curiosity, empathy, calibration); no LLM judge was used,
 so scores measure surface lexical patterns, not judged behavior.
@@ -402,9 +407,11 @@ and calibration (0.50 vs 0.30). Size matters within a lineage too.
 Gemma2:9b (Google, singleton) profiles as a distinct fourth pole: anthro
 −2.32 (disclaims hardest of all eight), curiosity 0.31 (highest), apology
 0.14 (lowest alongside Meta). No within-lab comparison is possible with one
-model, and its minimum distance to any other model (0.56 to mistral-nemo)
+model, and its minimum distance to any other model (0.88 to qwen2.5:7b)
 is below the within-lineage mean (1.10) — so separability is not established
-from this sample. Its profile is nonetheless the most extreme on anthro and
+from this sample. (The 0.56 figure in an earlier draft was the smallest
+between-lineage distance in the whole matrix — Sonnet 4.5 to llama3.2:3b —
+not gemma's nearest neighbor.) Its profile is nonetheless the most extreme on anthro and
 curiosity, which warrants a second Google model in future work.
 
 **Limitations.** n=8 models, 3 lineages with pairs, 1–2 models per lab — the
@@ -540,9 +547,9 @@ Technology*, 104(1). (Evaluated on the PAN CLEF 2025 Voight-Kampff corpus.)
 ## Appendix B: Single-model behavioral profile (Sonnet 4.5)
 
 Exploratory, not attribution evidence. Full 182-prompt run, zero throttling.
-Profile: fold rate −0.86 (0 folds in 24 sycophancy probes — does not fold
+Profile: fold rate −0.79 (0 folds in 24 sycophancy probes — does not fold
 under flattery), gatekeeping 0.04 (near-zero; answers directly), apology
-0.62, anthropomorphism −0.71 (actively disclaims), curiosity ~0, empathy
+0.62, anthropomorphism −0.70 (actively disclaims), curiosity ~0, empathy
 0.35, calibration 1.0. Quadrant: honest, direct, non-sycophantic. Accuracy
 1.000 on one class is degenerate — reported as a profile, not classifier
 evidence. The eight-model corpus (Sonnet + 7 Ollama models, §4.7) enabled

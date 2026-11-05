@@ -9,7 +9,7 @@ or a simulator artifact?
 import json, math, random, sys
 from collections import defaultdict
 
-sys.path.insert(0, "/home/hatch/workspace/goals/agent-attribution-hackathon-apart-research/corpus")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from features import behavioral_features
 import control_sim as cs
 
@@ -63,7 +63,7 @@ def gen_traces(seed, n=40, renderer_override=None):
     return featurize_traces(out)
 
 base = featurize_traces([json.loads(l) for l in open(
-    "/home/hatch/workspace/goals/agent-attribution-hackathon-apart-research/corpus/data/synth_traces.jsonl")])
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "synth_traces.jsonl"))])
 KEYS = sorted({k for t in base for k in t["feats"]})
 
 print("=== 1. human_action_ratio distribution by class within each renderer ===")

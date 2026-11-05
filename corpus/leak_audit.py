@@ -12,15 +12,15 @@ Audits:
 import json, math, random
 from collections import Counter, defaultdict
 
-import sys
-sys.path.insert(0, "/home/hatch/workspace/goals/agent-attribution-hackathon-apart-research/corpus")
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from features import behavioral_features
 
 CLASSES = ["rogue_agent", "nonbenign_loose", "nonbenign_close",
            "benign_veryloose", "benign_loose"]
 
 traces = [json.loads(l) for l in open(
-    "/home/hatch/workspace/goals/agent-attribution-hackathon-apart-research/corpus/data/synth_traces.jsonl")]
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "synth_traces.jsonl"))]
 for t in traces:
     t["feats"] = behavioral_features(t["events"])["features"]
 KEYS = sorted({k for t in traces for k in t["feats"]})
