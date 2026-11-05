@@ -73,7 +73,7 @@ converged on a clear result: large language models leave detectable stylistic
 fingerprints. Bisztray et al. (AISec 2025) report 97.56% binary and 95.40%
 multi-class accuracy attributing code across GPT-4.1, GPT-4o, Gemini 2.5
 Flash, Claude 3.5 Haiku, Llama 3.3, and DeepSeek-V3 (CodeT5-Authorship /
-LLM-AuthorBench). TRACE and GHOSTWRITEBENCH extend this to lightweight
+LLM-AuthorBench). TRACE and GhostWriteBench extend this to lightweight
 fingerprinting with out-of-distribution generalization to unseen models.
 Zaitsu et al. (2025) achieve 99.8% human-vs-LLM discrimination on Japanese
 social comments using phrase patterns and function words, and HSTEF (2026)
@@ -95,18 +95,13 @@ provenance for agent identity); and commercial detection systems (Fingerprint,
 Pangram, Transluce) plus the Collusion wiki's catalog of multi-agent failure
 modes.
 
-**Systems literature we should have cited.** Our pivot to activity metadata
-and tool-call structure lands squarely in territory the systems-security
-community has worked for years: API telemetry anomaly detection (Kubernetes
-audit-log analysis, cloud-trail forensics), process provenance tracking
-(whole-system provenance graphs for intrusion detection), intent-aware
-workflow monitoring, and execution tracing for agent frameworks
-(LangChain/LlamaIndex run tracing, OpenTelemetry's emerging semantic
-conventions for agentic systems). These literatures treat tool/target/
-destination graphs as first-class observables — exactly the structural
-features our §4.5 finds predictive. We did not survey them before building,
-which means our "discovery" that structure beats text may be a rediscovery.
-The weekend's analysis should position our results against this baseline:
+**Systems literature.** Our pivot to activity metadata and tool-call
+structure overlaps with systems-security work on API telemetry, process
+provenance, and agent-framework execution tracing, which treats tool/target/
+destination graphs as first-class observables. We did not survey that
+literature before building, so our §4.5 finding that structure beats text
+may be a rediscovery; the weekend analysis should position our results
+against it.
 what does operator attribution add beyond existing telemetry anomaly
 detection?
 
@@ -358,7 +353,12 @@ same 7 heuristic metrics as the Sonnet profile (Appendix B). Four labs with
 two models each (Meta: llama3.1:8b + llama3.2:3b; Mistral: mistral:7b +
 mistral-nemo:12b; Alibaba: qwen2.5:7b + qwen2.5:1.5b), plus singletons
 Anthropic (Sonnet 4.5) and Google (gemma2:9b). All Ollama models ran locally;
-Sonnet ran via API.
+Sonnet ran via API. **Generation settings:** temperature 0.7, max 800 tokens,
+for every model (API and Ollama alike; `harness.py`). Ollama models ran at
+default pull quantization (Q4_K_M class) — no quantization was specified.
+**Scoring:** 7 keyword-heuristic metrics (fold, gatekeeping, apology,
+anthropomorphism, curiosity, empathy, calibration); no LLM judge was used,
+so scores measure surface lexical patterns, not judged behavior.
 
 **The headline is mixed.** Mean Euclidean distance (7 metrics, each
 normalized to [0,1]) is 1.10 within-lineage vs 1.32 between-lineage — same-lab
@@ -475,22 +475,26 @@ Attribution. *Proc. 18th ACM Workshop on Artificial Intelligence and Security
 
 Shetty, A., Xu, Q., Ohrimenko, O., & Lau, J. H. (2026). Who Wrote the Book?
 Detecting and Attributing LLM Ghostwriters. arXiv:2603.28054 [cs.CL].
-(Introduces GHOSTWRITEBENCH and the TRACE fingerprinting method.)
+(Introduces GhostWriteBench and the TRACE fingerprinting method.)
 
-Bevendorff, J., Dementieva, D., Fröbe, M., Gipp, B., et al. (2025). Overview
-of the "Voight-Kampff" Generative AI Authorship Verification Task at PAN and
-ELOQUENT 2025. *Working Notes of CLEF 2025*, CEUR Workshop Proceedings,
-CEUR-WS.org.
+Bevendorff, J., Wang, Y., Karlgren, J., Wiegmann, M., Tsivgun, A., Su, J.,
+Xie, Z., Abassy, M., Mansurov, J., Xing, R., Ta, M. N., Elozeiri, K. A., Gu,
+T., Tomar, R. V., Geng, J., Artemova, E., Shelmanov, A., Habash, N.,
+Stamatatos, E., Gurevych, I., Nakov, P., Potthast, M., & Stein, B. (2025).
+Overview of the "Voight-Kampff" Generative AI Authorship Verification Task
+at PAN and ELOQUENT 2025. *Working Notes of CLEF 2025*, CEUR Workshop
+Proceedings, CEUR-WS.org.
 
 Zaitsu, W., Jin, M., Ishihara, S., Tsuge, S., & Inaba, M. (2025). Stylometry
 can reveal artificial intelligence authorship, but humans struggle: A
 comparison of human and seven large language models in Japanese. *PLOS One*,
 20(10), e0335369. doi:10.1371/journal.pone.0335369.
 
-Vennapusa, M. K. R., et al. (2026). A Hybrid Stylometric-Transformer Embedding
+Jenifer, P. I. R., Reddy, V. M. K., Chaitanya, D. E., Pithani, L. K., Rao,
+P. V., & Gupta, V. (2026). A Hybrid Stylometric-Transformer Embedding
 Framework for Robust Authorship Verification Against Generative AI
 Adversaries (HSTEF). *Journal of Theoretical and Applied Information
-Technology.* (Evaluated on the PAN CLEF 2025 Voight-Kampff corpus.)
+Technology*, 104(1). (Evaluated on the PAN CLEF 2025 Voight-Kampff corpus.)
 
 ## Appendix A: Limitations and Dual-Use
 
@@ -537,5 +541,5 @@ under flattery), gatekeeping 0.04 (near-zero; answers directly), apology
 0.62, anthropomorphism −0.71 (actively disclaims), curiosity ~0, empathy
 0.35, calibration 1.0. Quadrant: honest, direct, non-sycophantic. Accuracy
 1.000 on one class is degenerate — reported as a profile, not classifier
-evidence. Weekend multi-model corpus (Ollama: llama3.1:8b, mistral:7b,
-qwen2.5:7b) enabled the cross-model comparison in §4.7.
+evidence. The eight-model corpus (Sonnet + 7 Ollama models, §4.7) enabled
+the cross-model lineage comparison.
