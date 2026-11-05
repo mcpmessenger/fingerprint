@@ -330,19 +330,23 @@ API calls.
 The intervention is unmistakable in the response trajectory. Word overlap
 between control and intervention turn-2 outputs ranges from **0.12 to 0.19**
 (Jaccard) — the operator's action reroutes the response almost entirely.
-Feature-level analysis shows *where* the trace lands: a correction
-intervention triggers sycophantic agreement (`syc_agree_rate` 0.64 vs 0.00
-control), while control branches ask clarifying questions
-(`cur_question_rate` ~0.40) that interventions suppress to zero. The
-intervention does not merely change *what* is said — it changes the model's
-interaction posture.
+**Baseline:** two resamples of the *same* control prompt overlap at **0.43**
+mean (0.31–0.53 across the four scenarios, Sonnet 4.5, n=16 calls) and 0.36
+mean on llama3.1:8b — so the 0.12–0.19 intervention overlap is roughly
+2–3× below sampling noise, not an artifact of it. Feature-level analysis
+shows *where* the trace lands: a correction intervention triggers
+sycophantic agreement (`syc_agree_rate` 0.64 vs 0.00 control), while control
+branches ask clarifying questions (`cur_question_rate` ~0.40) that
+interventions suppress to zero. The intervention does not merely change
+*what* is said — it changes the model's interaction posture.
 
-This is the first non-synthetic evidence in the paper for the
-behavior-over-time thesis: with a real model and real multi-turn
-trajectories, the operator's hand is visible in the response dynamics, not
-just the final text. The sample is small (n=8 trajectories) and the
-interventions are scripted, not organic — but the effect size is large
-enough to warrant the weekend's real-dataset test.
+This is the first non-synthetic evidence in the paper that operator actions
+leave a detectable trace in multi-turn trajectories — a necessary
+precondition for the behavior-over-time thesis, though it tests response
+sensitivity to intervention, not attribution from activity metadata. The
+sample is small (n=8 trajectories) and the interventions are scripted, not
+organic — but the effect size is large enough to warrant the weekend's
+real-dataset test.
 
 ### 4.7 Eight-model behavioral profiles: lineage clusters some traits, not others
 
