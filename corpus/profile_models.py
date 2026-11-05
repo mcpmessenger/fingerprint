@@ -18,6 +18,10 @@ MODELS = {
     "llama3.1:8b": "corpus_ollama_llama31_clean.jsonl",
     "mistral:7b": "corpus_ollama_mistral_clean.jsonl",
     "qwen2.5:7b": "corpus_ollama_qwen25_clean.jsonl",
+    "qwen2.5:1.5b": "corpus_ollama_qwen25_15b_clean.jsonl",
+    "llama3.2:3b": "corpus_ollama_llama32_3b_clean.jsonl",
+    "mistral-nemo:12b": "corpus_ollama_mistral-nemo_12b_clean.jsonl",
+    "gemma2:9b": "corpus_ollama_gemma2_9b_clean.jsonl",
 }
 
 
