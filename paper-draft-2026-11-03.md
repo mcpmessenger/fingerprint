@@ -102,6 +102,27 @@ destination graphs as first-class observables. We did not survey that
 literature before building, so our §4.5 finding that structure beats text
 may be a rediscovery; the weekend analysis should position our results
 against it.
+
+**Weights as a provenance channel.** The newest evidence that artifacts
+carry recoverable provenance comes from weight space, not behavior.
+Takehi et al. (2026) report that a frontier model, given only raw weights
+as text — no tools, no forward passes — named which of four games a small
+PPO policy network was trained to play (all four correct), and edited
+0.016% of a Qwen3.5-0.8B model's weights to lift MATH-500 from 7.9% to
+48.1%. That is provenance *in the artifact*, and a second channel pointing
+the same direction as our Thesis A — but it is a research blog, not a
+peer-reviewed paper, and the headline results are single-model and small-net.
+Ahmed (2026) is the counterweight: testing Claude Opus 5.5 on small CNNs,
+he finds zero-shot weight reading is better described as "local arithmetic
+plus dataset priors" than weight-flow tracing, and supplies an audit
+protocol for future claims. He does not refute Takehi — batch-norm
+statistics in his own tests reveal optimizer steps, and output-layer sign
+patterns recover a dataset split — but he caps what the reading results
+prove. The two papers together also defend the behavioral approach: the
+Takehi group could *not* pick the sycophantic model from weights alone,
+so some behavioral traits carry signal that weight-reading misses. The
+channels are complementary, each with blind spots.
+
 what does operator attribution add beyond existing telemetry anomaly
 detection?
 
@@ -466,6 +487,16 @@ real messages, use real tools, and deceive better than our template banks.
 The weekend's provided dataset is the empirical test of whether the
 two-layer structure survives contact with genuine human operators.
 
+**Future work: a weight-space lineage test.** Our §4.7 lineage test did not
+reach significance (exact permutation p = 0.14, only three within-lineage
+pairs). Weight-space programming (Takehi et al. 2026) suggests lineage may
+be *more* detectable in weight space than in behavior: models from the same
+base and lab share weight structure that behavioral probes can only infer.
+The test — weight-space distance versus behavioral distance for same-lab
+model pairs — is proposed here, not planned for the sprint: the weekend
+dataset contains agent messages and incident logs, not weights, so it is
+contingent on weight access that this sprint does not provide.
+
 ## 6. Acknowledgments
 
 We thank four AI systems for adversarial pre-review that materially improved
@@ -507,6 +538,18 @@ Framework for Robust Authorship Verification Against Generative AI
 Adversaries (HSTEF). *Journal of Theoretical and Applied Information
 Technology*, 104(1). (Evaluated on the PAN CLEF 2025 Voight-Kampff corpus.)
 
+Takehi, R., Teoh, J., Zhang, A., & Khattab, O. (2026). Sparks of
+Weight-Space Programming: LLMs can natively read & write neural network
+weights. Research blog, MIT CSAIL.
+https://rikiyat.github.io/blog/weight-space-programming (Not peer-reviewed;
+cited for the weight-reading and weight-editing results in §2 and Appendix A.)
+
+Ahmed, N. S. (2026). Can an LLM Actually Reason and Program about Neural
+Network's Weights or is it just memorization on steroids? Exploring
+"Weight-Space Programming". arXiv:2611.08070 [cs.LG]. (Submitted Nov 5,
+2026; the audit protocol and "local arithmetic plus dataset priors"
+counterweight cited in §2 and Appendix A.)
+
 ## Appendix A: Limitations and Dual-Use
 
 - **Synthetic circularity is the fundamental limitation of this draft.**
@@ -534,6 +577,19 @@ Technology*, 104(1). (Evaluated on the PAN CLEF 2025 Voight-Kampff corpus.)
   release the *measurement instruments* (prompts, features, synthetic
   generator) but not a tuned production classifier, and the sprint's
   security rules govern what ships.
+- **Weight-level editing is an evasion channel our spoofing test does not
+  cover.** Our §4.3 result is about labels: an actor that controls its own
+  actor field collapses rogue recall to 0.025. Takehi et al. (2026) show
+  the same attack exists one level deeper — editing 0.016% of a model's
+  weights changes its behavior dramatically — so a behavioral fingerprint
+  can in principle be erased or planted at the weight level. Structure
+  features (§4.5) are harder to fake than labels, but they are still
+  behavioral, and therefore still editable by whoever controls the weights.
+  The counterweight is the Takehi group's own negative result: they could
+  not detect sycophancy from weights alone, so behavioral signals carry
+  information weight-reading misses. The two channels are complementary,
+  and a production attribution system would need both — which is beyond
+  what this paper, or the sprint dataset, can test.
 - Pre-sprint synthetic results validate method, not reality; the weekend's
   provided dataset is the empirical test.
 - **Attribution is surveillance with a lab coat on.** The two-layer finding
